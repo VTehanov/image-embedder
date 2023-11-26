@@ -1,13 +1,27 @@
 "use client";
 
 import { type Image } from "@prisma/client";
+import Skeleton from "react-loading-skeleton";
 import { toast } from "sonner";
 import { UploadButton } from "~/components/uploadthing";
 import { api } from "~/trpc/react";
 
-const ImageGrid = ({ images }: { images: Image[] }) => {
+const ImageGrid = ({
+  images,
+  isLoading = true,
+}: {
+  images: Image[];
+  isLoading: boolean;
+}) => {
   return (
     <div className="grid grid-cols-4 gap-4">
+      {isLoading ? (
+        <>
+          <Skeleton className="relative top-[-3px] h-full w-full !rounded-none" />
+          <Skeleton className="relative top-[-3px] h-full w-full !rounded-none" />
+          <Skeleton className="relative top-[-3px] h-full w-full !rounded-none" />
+        </>
+      ) : null}
       {images.map((image) => (
         <div
           key={image.id}
@@ -28,7 +42,7 @@ export default function Home() {
       await utils.image.getAll.invalidate();
     },
   });
-  const { data } = api.image.getAll.useQuery();
+  const { data, isLoading } = api.image.getAll.useQuery();
 
   return (
     <main className="flex min-h-screen flex-col items-center gap-8 p-24">
@@ -46,7 +60,7 @@ export default function Home() {
         }}
       />
 
-      {data ? <ImageGrid images={data} /> : null}
+      {data ? <ImageGrid isLoading={isLoading} images={data} /> : null}
     </main>
   );
 }
