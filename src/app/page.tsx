@@ -1,41 +1,42 @@
 "use client";
 
+import { type Image } from "@prisma/client";
 import { UploadButton } from "~/components/uploadthing";
+import { api } from "~/trpc/react";
 
-const ImageGrid = () => {
-  const image = (
-    <div
-      className="h-48 w-48 bg-cover bg-center"
-      style={{
-        backgroundImage:
-          "url(https://images.unsplash.com/photo-1700740760502-f28b1769c8d3?q=80&w=3540&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)",
-      }}
-    />
-  );
-
+const ImageGrid = ({ images }: { images: Image[] }) => {
   return (
     <div className="grid grid-cols-4 gap-4">
-      {image}
-      {image}
-      {image}
-      {image}
-      {image}
-      {image}
-      {image}
-      {image}
+      {images.map((image) => (
+        <div
+          key={image.id}
+          className="h-48 w-48 bg-cover bg-center"
+          style={{
+            backgroundImage: `url(${image.url})`,
+          }}
+        />
+      ))}
     </div>
   );
 };
 
 export default function Home() {
+  const utils = api.useUtils();
+  const { mutate } = api.image.create.useMutation({
+    onSuccess: async () => {
+      await utils.image.getAll.invalidate();
+    },
+  });
+  const { data } = api.image.getAll.useQuery();
+
   return (
     <main className="flex min-h-screen flex-col items-center gap-8 p-24">
       <UploadButton
         endpoint="sampleImage"
         onClientUploadComplete={(res) => {
-          // Do something with the response
-          console.log("Files: ", res);
-          alert("Upload Completed");
+          if (res[0]?.url) {
+            mutate({ url: res[0].url });
+          }
         }}
         onUploadError={(error: Error) => {
           // Do something with the error.
@@ -43,7 +44,7 @@ export default function Home() {
         }}
       />
 
-      <ImageGrid />
+      {data ? <ImageGrid images={data} /> : null}
     </main>
   );
 }
