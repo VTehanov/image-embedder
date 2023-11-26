@@ -1,6 +1,7 @@
 "use client";
 
 import { type Image } from "@prisma/client";
+import { toast } from "sonner";
 import { UploadButton } from "~/components/uploadthing";
 import { api } from "~/trpc/react";
 
@@ -36,6 +37,7 @@ export default function Home() {
         onClientUploadComplete={(res) => {
           if (res[0]?.url) {
             mutate({ url: res[0].url });
+            toast.success("Uploaded successfully!");
           }
         }}
         onUploadError={(error: Error) => {
