@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { getImageDescription } from "~/lib/openai";
 
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
@@ -12,12 +13,15 @@ export const imageRouter = createTRPCRouter({
   create: publicProcedure
     .input(z.object({ url: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
-      const image = await ctx.db.image.create({
-        data: {
-          url: input.url,
-        },
-      });
+      const [metadata, storedImage] = await Promise.all([
+        getImageDescription(input.url),
+        ctx.db.image.create({
+          data: {
+            url: input.url,
+          },
+        }),
+      ]);
 
-      return image;
+      return storedImage;
     }),
 });

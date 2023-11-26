@@ -37,12 +37,12 @@ const ImageGrid = ({
 
 export default function Home() {
   const utils = api.useUtils();
+  const { data, isLoading } = api.image.getAll.useQuery();
   const { mutate } = api.image.create.useMutation({
     onSuccess: async () => {
       await utils.image.getAll.invalidate();
     },
   });
-  const { data, isLoading } = api.image.getAll.useQuery();
 
   return (
     <main className="flex min-h-screen flex-col items-center gap-8 p-24">
