@@ -1,8 +1,11 @@
 "use client";
 
 import { type Image } from "@prisma/client";
+import { useState } from "react";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "sonner";
+import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
 import { UploadButton } from "~/components/uploadthing";
 import { api } from "~/trpc/react";
 
@@ -37,12 +40,19 @@ const ImageGrid = ({
 
 export default function Home() {
   const utils = api.useUtils();
+  const [query, setQuery] = useState("");
   const { data, isLoading } = api.image.getAll.useQuery();
   const { mutate } = api.image.create.useMutation({
     onSuccess: async () => {
       await utils.image.getAll.invalidate();
     },
   });
+  const { mutate: submitQuery, data: results } =
+    api.image.searchImages.useMutation();
+
+  const searchImages = () => {
+    submitQuery({ query });
+  };
 
   return (
     <main className="flex min-h-screen flex-col items-center gap-8 p-24">
@@ -61,6 +71,17 @@ export default function Home() {
       />
 
       {data ? <ImageGrid isLoading={isLoading} images={data} /> : null}
+
+      <div className="flex flex-col">
+        <div className="flex gap-2">
+          <Input value={query} onChange={(e) => setQuery(e.target.value)} />
+          <Button onClick={searchImages}>Search</Button>
+        </div>
+
+        {results?.length
+          ? results.map((r) => <div>{r.metadata?.imageUrl}</div>)
+          : null}
+      </div>
     </main>
   );
 }

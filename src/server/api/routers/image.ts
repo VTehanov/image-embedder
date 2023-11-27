@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { embedText, getImageDescription } from "~/lib/openai";
-import { upsertImage } from "~/lib/pinecone";
+import { getMatchesFromEmbeddings, upsertImage } from "~/lib/pinecone";
 
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
@@ -24,6 +24,15 @@ export const imageRouter = createTRPCRouter({
       ]);
 
       return storedImage;
+    }),
+
+  searchImages: publicProcedure
+    .input(z.object({ query: z.string().min(1) }))
+    .mutation(async ({ input }) => {
+      const embeddedQuery = await embedText(input.query);
+      const results = await getMatchesFromEmbeddings(embeddedQuery, 5);
+
+      return results;
     }),
 });
 
